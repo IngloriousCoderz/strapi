@@ -363,7 +363,7 @@ const formatValue = value => utils.valueToId(value);
  * @param {*} options.value - Where clause alue
  */
 const buildWhereClause = ({ field, operator, value }) => {
-  if (Array.isArray(value) && !['in', 'nin'].includes(operator)) {
+  if (Array.isArray(value) && !['in', 'nin', 'or'].includes(operator)) {
     return {
       $or: value.map(val => buildWhereClause({ field, operator, value: val })),
     };
@@ -384,6 +384,8 @@ const buildWhereClause = ({ field, operator, value }) => {
       return { [field]: { $gt: val } };
     case 'gte':
       return { [field]: { $gte: val } };
+    case 'or':
+      return { $or: Array.isArray(val) ? val : [val] };
     case 'in':
       return {
         [field]: {
@@ -422,6 +424,12 @@ const buildWhereClause = ({ field, operator, value }) => {
           $not: new RegExp(val),
         },
       };
+    case 'geoIntersects':
+      return {
+        [field]: {
+          $geoIntersects: val
+        }
+      }
 
     default:
       throw new Error(`Unhandled whereClause : ${fullField} ${operator} ${value}`);
